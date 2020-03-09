@@ -28,6 +28,10 @@ import requests
 from six import text_type
 
 # CanvasSync module imports
+from CanvasSync.constants import ENTITY_LINKED_FILE
+from CanvasSync.constants import HISTORY_ID
+from CanvasSync.constants import HISTORY_PATH
+from CanvasSync.constants import HISTORY_TYPE
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.utilities.ANSI import ANSI
 
@@ -50,7 +54,7 @@ class LinkedFile(CanvasEntity):
         file_name = os.path.split(download_url)[-1]
 
         # File path
-        file_path = parent.get_path() + file_name
+        file_path = os.path.join(parent.get_path(), file_name)
 
         # No file extension or weirdly long filename will not be allowed
         # (this is not strictly necessary as the regex should only match OK URLs)
@@ -64,7 +68,14 @@ class LinkedFile(CanvasEntity):
                               sync_path=file_path,
                               parent=parent,
                               folder=False,
-                              identifier=u"linked_file")
+                              identifier=ENTITY_LINKED_FILE)
+
+        history_record = dict({
+            HISTORY_ID: download_url,
+            HISTORY_PATH: file_path,
+            HISTORY_TYPE: ENTITY_LINKED_FILE
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
     def __repr__(self):
         """ String representation, overwriting base class method """
