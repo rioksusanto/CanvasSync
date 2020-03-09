@@ -28,6 +28,7 @@ from CanvasSync.entities.course import Course
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.utilities import helpers
 from CanvasSync.utilities.ANSI import ANSI
+from CanvasSync.utilities.history import History
 
 
 class Synchronizer(CanvasEntity):
@@ -53,6 +54,7 @@ class Synchronizer(CanvasEntity):
         # A dictionary to store lists of CanvasEntity objects
         # added to the hierarchy under a course ID number
         self.entities = {}
+        self.history = History(settings)
 
         # Initialize base class
         CanvasEntity.__init__(self,

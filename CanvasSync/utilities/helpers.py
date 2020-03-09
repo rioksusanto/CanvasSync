@@ -19,6 +19,8 @@ from __future__ import print_function
 
 # Inbuilt modules
 import os
+import calendar
+from datetime import datetime
 
 # Third party modules
 import requests
@@ -156,3 +158,7 @@ def validate_token(domain, token):
         return False
     else:
         return True
+
+def convert_utc_to_timestamp(str):
+    time = datetime.strptime(str,'%Y-%m-%dT%H:%M:%SZ')
+    return calendar.timegm(time.utctimetuple())
