@@ -67,7 +67,10 @@ class File(CanvasEntity):
     def download(self):
         """ Download the file """
         if os.path.exists(self.sync_path):
-            return False
+            remote_file_modified_at = helpers.convert_utc_to_timestamp(self.file_info.get('modified_at'))
+            local_file_modified_at = os.stat(self.sync_path).st_mtime
+            if remote_file_modified_at == local_file_modified_at:
+                return False
 
         self.print_status(u"DOWNLOADING", color=u"blue")
 
@@ -86,6 +89,22 @@ class File(CanvasEntity):
 
             # Re-raise, will be catched in CanvasSync.py
             raise e
+
+        modified_at = self.file_info.get('modified_at')
+        id = self.file_info.get('id')
+        path = self.sync_path
+
+        # Update file access date and modified date
+        timestamp = helpers.convert_utc_to_timestamp(modified_at)
+        os.utime(self.sync_path, (timestamp, timestamp))
+
+        # Update sync history
+        history_record = {
+            'id': id,
+            'path': path,
+            'modified_at': modified_at
+        }
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
         return True
 
