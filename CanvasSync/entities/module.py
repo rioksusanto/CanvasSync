@@ -59,12 +59,6 @@ class Module(CanvasEntity):
                               sync_path=module_path,
                               parent=parent,
                               identifier=identifier)
-        history_record = dict({
-            CONSTANTS.HISTORY_ID: module_id,
-            CONSTANTS.HISTORY_PATH: module_path,
-            CONSTANTS.HISTORY_TYPE: identifier
-        })
-        self.synchronizer.history.write_history_record_to_file(history_record)
 
     def __repr__(self):
         """ String representation, overwriting base class method """
@@ -174,6 +168,13 @@ class Module(CanvasEntity):
         print(text_type(self))
 
         self.add_items()
+
+        history_record = dict({
+            CONSTANTS.HISTORY_ID: self.get_id(),
+            CONSTANTS.HISTORY_PATH: self.sync_path,
+            CONSTANTS.HISTORY_TYPE: self.get_identifier_string()
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
         for child in self:
             child.sync()

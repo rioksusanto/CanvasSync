@@ -67,13 +67,6 @@ class LinkedFile(CanvasEntity):
                               folder=False,
                               identifier=CONSTANTS.ENTITY_LINKED_FILE)
 
-        history_record = dict({
-            CONSTANTS.HISTORY_ID: download_url,
-            CONSTANTS.HISTORY_PATH: file_path,
-            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_LINKED_FILE
-        })
-        self.synchronizer.history.write_history_record_to_file(history_record)
-
     def __repr__(self):
         """ String representation, overwriting base class method """
         return u" " * 15 + u"|   " + u"\t" * self.indent + u"%s: %s" % (ANSI.format(u"Linked File",
@@ -138,6 +131,14 @@ class LinkedFile(CanvasEntity):
 
         if was_downloaded != - 1:
             self.print_status(u"SYNCED", color=u"green", overwrite_previous_line=was_downloaded)
+
+
+        history_record = dict({
+            CONSTANTS.HISTORY_ID: self.download_url,
+            CONSTANTS.HISTORY_PATH: self.sync_path,
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_LINKED_FILE
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
     def show(self):
         """ Show the folder hierarchy by printing every level """
