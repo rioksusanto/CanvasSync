@@ -26,14 +26,7 @@ import sys
 # Third party
 from six import text_type
 
-from CanvasSync.constants import DISPLAY_NAME
-from CanvasSync.constants import ENTITY_FILE
-from CanvasSync.constants import FILE_LOCKED_FOR_USER
-from CanvasSync.constants import HISTORY_ID
-from CanvasSync.constants import ID
-from CanvasSync.constants import HISTORY_MODIFIED_AT
-from CanvasSync.constants import HISTORY_PATH
-from CanvasSync.constants import HISTORY_TYPE
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.utilities import helpers
 from CanvasSync.utilities.ANSI import ANSI
@@ -49,10 +42,10 @@ class File(CanvasEntity):
 
         self.file_info = file_info
 
-        self.locked = self.file_info[FILE_LOCKED_FOR_USER]
+        self.locked = self.file_info[CONSTANTS.FILE_LOCKED_FOR_USER]
 
-        file_id = self.file_info[HISTORY_ID]
-        file_name = helpers.get_corrected_name(self.file_info[DISPLAY_NAME])
+        file_id = self.file_info[CONSTANTS.HISTORY_ID]
+        file_name = helpers.get_corrected_name(self.file_info[CONSTANTS.DISPLAY_NAME])
         file_path = os.path.join(parent.get_path(), file_name)
 
         # Initialize base class
@@ -62,7 +55,7 @@ class File(CanvasEntity):
                               sync_path=file_path,
                               parent=parent,
                               folder=False,
-                              identifier=ENTITY_FILE,
+                              identifier=CONSTANTS.ENTITY_FILE,
                               add_to_list_of_entities=add_to_list_of_entities)
 
     def __repr__(self):
@@ -74,7 +67,7 @@ class File(CanvasEntity):
     def download(self):
         """ Download the file """
         if os.path.exists(self.sync_path):
-            remote_file_modified_at = helpers.convert_utc_to_timestamp(self.file_info.get(HISTORY_MODIFIED_AT))
+            remote_file_modified_at = helpers.convert_utc_to_timestamp(self.file_info.get(CONSTANTS.HISTORY_MODIFIED_AT))
             local_file_modified_at = os.stat(self.sync_path).st_mtime
             if remote_file_modified_at == local_file_modified_at:
                 return False
@@ -97,8 +90,8 @@ class File(CanvasEntity):
             # Re-raise, will be catched in CanvasSync.py
             raise e
 
-        modified_at = self.file_info.get(HISTORY_MODIFIED_AT)
-        id = self.file_info.get(ID)
+        modified_at = self.file_info.get(CONSTANTS.HISTORY_MODIFIED_AT)
+        id = self.file_info.get(CONSTANTS.ID)
         path = self.sync_path
 
         # Update file access date and modified date
@@ -107,10 +100,10 @@ class File(CanvasEntity):
 
         # Update sync history
         history_record = dict({
-            HISTORY_ID: id,
-            HISTORY_MODIFIED_AT: modified_at,
-            HISTORY_PATH: path,
-            HISTORY_TYPE: ENTITY_FILE
+            CONSTANTS.HISTORY_ID: id,
+            CONSTANTS.HISTORY_MODIFIED_AT: modified_at,
+            CONSTANTS.HISTORY_PATH: path,
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_FILE
         })
         self.synchronizer.history.write_history_record_to_file(history_record)
 

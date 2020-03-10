@@ -29,6 +29,7 @@ import re
 # Third party
 from six import text_type
 
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.utilities.ANSI import ANSI
 from CanvasSync.utilities import helpers
@@ -50,11 +51,11 @@ class Page(CanvasEntity):
         # body, which will be downloaded in the self.download() method. The slightly messy code below makes the class
         # functional with either information supplied.
         self.page_item_info = page_info
-        self.page_info = self.page_item_info if u"id" not in self.page_item_info else None
+        self.page_info = self.page_item_info if CONSTANTS.ID not in self.page_item_info else None
 
-        page_id = self.page_item_info[u"id"] if not self.page_info else self.page_info[u"page_id"]
-        page_name = helpers.get_corrected_name(self.page_item_info[u"title"])
-        page_path = parent.get_path() + page_name
+        page_id = self.page_item_info[CONSTANTS.ID] if not self.page_info else self.page_info.get(CONSTANTS.PAGE_ID)
+        page_name = helpers.get_corrected_name(self.page_item_info.get(CONSTANTS.TITLE))
+        page_path = os.path.join(parent.get_path(), page_name)
 
         # Initialize base class
         CanvasEntity.__init__(self,
@@ -63,7 +64,7 @@ class Page(CanvasEntity):
                               sync_path=page_path,
                               parent=parent,
                               folder=False,
-                              identifier=u"page")
+                              identifier=CONSTANTS.ENTITY_PAGE)
 
     def __repr__(self):
         """ String representation, overwriting base class method """
@@ -82,7 +83,7 @@ class Page(CanvasEntity):
         for url in canvas_file_urls:
             try:
                 file_info = self.api.download_item_information(url)
-                if u'display_name' not in file_info:
+                if CONSTANTS.DISPLAY_NAME not in file_info:
                     continue
             except Exception:
                 continue
@@ -110,38 +111,48 @@ class Page(CanvasEntity):
 
         return sub_files
 
-    def push_down(self):
-        """
-        Lower the level of this page once into a sub-folder of similar name
-        """
-        self._make_folder()
-        base, tail = os.path.split(self.sync_path)
-        self.sync_path = self.sync_path + u"/" + tail
+    def update_page_folder_modified_at(self, modified_at):
+        # Update page folder access date and modified date
+        if os.path.exists(self.sync_path):
+            timestamp = helpers.convert_utc_to_timestamp(modified_at)
+            os.utime(self.sync_path, (timestamp, timestamp))
+            history_record = dict({
+                CONSTANTS.HISTORY_ID: self.page_item_info.get(CONSTANTS.ID),
+                CONSTANTS.HISTORY_MODIFIED_AT: modified_at,
+                CONSTANTS.HISTORY_PATH: self.sync_path,
+                CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_PAGE
+            })
+            self.synchronizer.history.write_history_record_to_file(history_record)
 
     def download(self):
-        """ Download the page """
-        if os.path.exists(self.sync_path + u".html"):
-            return False
-
         # Print download status
         self.print_status(u"DOWNLOADING", color=u"blue")
 
         # Download additional info and HTML body of the Page object if not already supplied
         self.page_info = self.api.download_item_information(self.page_item_info[u"url"]) if not self.page_info else self.page_info
 
+        # Check if page updated
+        if os.path.exists(self.sync_path):
+            remote_updated_at = helpers.convert_utc_to_timestamp(self.page_info.get(CONSTANTS.UPDATED_AT))
+            local_updated_at = os.stat(self.sync_path).st_mtime
+            if remote_updated_at == local_updated_at:
+                return False
+
         # Create a HTML page locally and add a link leading to the live version
-        body = self.page_info.get(u"body", "")
-        html_url = self.page_info.get(u"html_url", "")
+        body = self.page_info.get(CONSTANTS.PAGE_BODY, "")
+        html_url = self.page_info.get(CONSTANTS.PAGE_HTML_URL, "")
 
-        if self.download_linked_files(body):
-            self.push_down()
+        # Add linked files to children
+        self.download_linked_files(body)
+        self._make_folder()
 
-        if not os.path.exists(self.sync_path):
-            with io.open(self.sync_path + u".html", u"w", encoding=u"utf-8") as out_file:
-                out_file.write(u"<h1><strong>%s</strong></h1>" % self.name)
-                out_file.write(u"<big><a href=\"%s\">Click here to open the live page in Canvas</a></big>" % html_url)
-                out_file.write(u"<hr>")
-                out_file.write(body or u"")
+        base, tail = os.path.split(self.sync_path)
+        html_path = os.path.join(self.sync_path, tail) + u".html"
+        with io.open(html_path, u"w", encoding=u"utf-8") as out_file:
+            out_file.write(u"<h1><strong>%s</strong></h1>" % self.name)
+            out_file.write(u"<big><a href=\"%s\">Click here to open the live page in Canvas</a></big>" % html_url)
+            out_file.write(u"<hr>")
+            out_file.write(body or u"")
 
         return True
 
@@ -175,6 +186,8 @@ class Page(CanvasEntity):
         for file in self:
             file.update_path()
             file.sync()
+
+        self.update_page_folder_modified_at(self.page_info.get(CONSTANTS.UPDATED_AT))
 
     def show(self):
         """ Show the folder hierarchy by printing every level """

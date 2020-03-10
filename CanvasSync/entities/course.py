@@ -29,13 +29,7 @@ import os
 from six import text_type
 
 # CanvasSync modules
-from CanvasSync.constants import COURSE_CODE
-from CanvasSync.constants import ENTITY_COURSE
-from CanvasSync.constants import HISTORY_ID
-from CanvasSync.constants import HISTORY_PATH
-from CanvasSync.constants import HISTORY_TYPE
-from CanvasSync.constants import ID
-from CanvasSync.constants import NAME
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.assignments_folder import AssignmentsFolder
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.entities.folder import Folder
@@ -55,12 +49,12 @@ class Course(CanvasEntity):
 
         self.course_info = course_info
 
-        course_id = self.course_info[ID]
+        course_id = self.course_info[CONSTANTS.ID]
 
-        course_name = helpers.get_corrected_name(self.course_info[COURSE_CODE].split(";")[-1])
+        course_name = helpers.get_corrected_name(self.course_info[CONSTANTS.COURSE_CODE].split(";")[-1])
 
         if settings.use_nicknames:
-            course_name = self.course_info[NAME]
+            course_name = self.course_info[CONSTANTS.NAME]
 
         course_path = os.path.join(parent.get_path(), course_name)
 
@@ -72,7 +66,7 @@ class Course(CanvasEntity):
                               name=course_name,
                               sync_path=course_path,
                               parent=parent,
-                              identifier=ENTITY_COURSE,
+                              identifier=CONSTANTS.ENTITY_COURSE,
                               folder=self.to_be_synced)
 
     def __repr__(self):
@@ -147,9 +141,9 @@ class Course(CanvasEntity):
 
         # sync history
         history_record = dict({
-            HISTORY_ID: self.get_id(),
-            HISTORY_PATH: self.get_path(),
-            HISTORY_TYPE: ENTITY_COURSE
+            CONSTANTS.HISTORY_ID: self.get_id(),
+            CONSTANTS.HISTORY_PATH: self.get_path(),
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_COURSE
         })
         self.synchronizer.history.write_history_record_to_file(history_record)
 

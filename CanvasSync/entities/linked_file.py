@@ -28,10 +28,7 @@ import requests
 from six import text_type
 
 # CanvasSync module imports
-from CanvasSync.constants import ENTITY_LINKED_FILE
-from CanvasSync.constants import HISTORY_ID
-from CanvasSync.constants import HISTORY_PATH
-from CanvasSync.constants import HISTORY_TYPE
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.utilities.ANSI import ANSI
 
@@ -68,12 +65,12 @@ class LinkedFile(CanvasEntity):
                               sync_path=file_path,
                               parent=parent,
                               folder=False,
-                              identifier=ENTITY_LINKED_FILE)
+                              identifier=CONSTANTS.ENTITY_LINKED_FILE)
 
         history_record = dict({
-            HISTORY_ID: download_url,
-            HISTORY_PATH: file_path,
-            HISTORY_TYPE: ENTITY_LINKED_FILE
+            CONSTANTS.HISTORY_ID: download_url,
+            CONSTANTS.HISTORY_PATH: file_path,
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_LINKED_FILE
         })
         self.synchronizer.history.write_history_record_to_file(history_record)
 
@@ -106,7 +103,6 @@ class LinkedFile(CanvasEntity):
             return False
 
         self.print_status(u"DOWNLOADING", color=u"blue")
-
         # Attempt to download the file
         try:
             response = requests.get(self.download_url)

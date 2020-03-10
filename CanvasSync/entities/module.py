@@ -26,12 +26,7 @@ import os
 from six import text_type
 
 # CanvasSync modules
-from CanvasSync.constants import ENTITY_MODULE
-from CanvasSync.constants import HISTORY_ID
-from CanvasSync.constants import HISTORY_PATH
-from CanvasSync.constants import HISTORY_TYPE
-from CanvasSync.constants import NAME
-from CanvasSync.constants import ID
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.entities.external_url import ExternalUrl
 from CanvasSync.entities.file import File
@@ -41,7 +36,7 @@ from CanvasSync.utilities.ANSI import ANSI
 
 
 class Module(CanvasEntity):
-    def __init__(self, module_info, module_position, parent, identifier=ENTITY_MODULE):
+    def __init__(self, module_info, module_position, parent, identifier=CONSTANTS.ENTITY_MODULE):
         """, i
         Constructor method, initializes base CanvasEntity class and adds all children Folder and/or Item objects to the
         list of children
@@ -53,8 +48,8 @@ class Module(CanvasEntity):
 
         self.module_info = module_info
 
-        module_id = self.module_info[ID]
-        module_name = helpers.get_corrected_name(self.module_info[NAME])
+        module_id = self.module_info[CONSTANTS.ID]
+        module_name = helpers.get_corrected_name(self.module_info[CONSTANTS.NAME])
         module_path = os.path.join(parent.get_path(), u"%s - %s" % (module_position, module_name))
 
         # Initialize base class
@@ -65,9 +60,9 @@ class Module(CanvasEntity):
                               parent=parent,
                               identifier=identifier)
         history_record = dict({
-            HISTORY_ID: module_id,
-            HISTORY_PATH: module_path,
-            HISTORY_TYPE: identifier
+            CONSTANTS.HISTORY_ID: module_id,
+            CONSTANTS.HISTORY_PATH: module_path,
+            CONSTANTS.HISTORY_TYPE: identifier
         })
         self.synchronizer.history.write_history_record_to_file(history_record)
 
