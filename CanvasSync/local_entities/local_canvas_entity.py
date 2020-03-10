@@ -11,6 +11,7 @@ point of view of the local file system.
 import os
 
 # CanvasSync module imports
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.utilities import helpers
 
 
@@ -38,7 +39,7 @@ class LocalCanvasEntity(object):
         self.history = history if history is not None else {}
 
         # Identifier information
-        self.id = self.history.get("id")
+        self.id = self.history.get(CONSTANTS.HISTORY_ID)
 
         # Parent object
         self.parent = parent
