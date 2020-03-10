@@ -27,6 +27,7 @@ from __future__ import print_function
 from six import text_type
 
 # CanvasSync modules
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.utilities.ANSI import ANSI
 from CanvasSync.entities.module import Module
 
@@ -89,6 +90,13 @@ class SubHeader(Module):
         print(text_type(self))
 
         self.add_items(items=self.items)
+
+        history_record = dict({
+            CONSTANTS.HISTORY_ID: self.get_id(),
+            CONSTANTS.HISTORY_PATH: self.sync_path,
+            CONSTANTS.HISTORY_TYPE: self.get_identifier_string()
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
         for child in self:
             child.sync()

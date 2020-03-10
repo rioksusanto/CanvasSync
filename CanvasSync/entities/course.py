@@ -139,14 +139,6 @@ class Course(CanvasEntity):
         # Add files folder
         self.add_files_folder()
 
-        # sync history
-        history_record = dict({
-            CONSTANTS.HISTORY_ID: self.get_id(),
-            CONSTANTS.HISTORY_PATH: self.get_path(),
-            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_COURSE
-        })
-        self.synchronizer.history.write_history_record_to_file(history_record)
-
         counter[0] += 1
         for child in self:
             child.walk(counter)
@@ -170,6 +162,14 @@ class Course(CanvasEntity):
 
         # Add Various Files folder
         self.add_files_folder()
+
+        # sync history
+        history_record = dict({
+            CONSTANTS.HISTORY_ID: self.get_id(),
+            CONSTANTS.HISTORY_PATH: self.get_path(),
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_COURSE
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
         for child in self:
             child.sync()
