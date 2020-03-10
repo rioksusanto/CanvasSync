@@ -22,16 +22,20 @@ See developer_info.txt file for more information on the class hierarchy of Canva
 # Future imports
 from __future__ import print_function
 
+# Inbuilt modules
+import os
+
 # Third party
 from six import text_type
 
 # CanvasSync modules
-from CanvasSync.entities.canvas_entity import CanvasEntity
-from CanvasSync.entities.module import Module
+from CanvasSync import constants as CONSTANTS
 from CanvasSync.entities.assignments_folder import AssignmentsFolder
+from CanvasSync.entities.canvas_entity import CanvasEntity
 from CanvasSync.entities.folder import Folder
-from CanvasSync.utilities.ANSI import ANSI
+from CanvasSync.entities.module import Module
 from CanvasSync.utilities import helpers
+from CanvasSync.utilities.ANSI import ANSI
 
 
 class Course(CanvasEntity):
@@ -45,14 +49,14 @@ class Course(CanvasEntity):
 
         self.course_info = course_info
 
-        course_id = self.course_info[u"id"]
+        course_id = self.course_info[CONSTANTS.ID]
 
-        course_name = helpers.get_corrected_name(self.course_info[u"course_code"].split(";")[-1])
+        course_name = helpers.get_corrected_name(self.course_info[CONSTANTS.COURSE_CODE].split(";")[-1])
 
         if settings.use_nicknames:
-            course_name = self.course_info[u"name"]
+            course_name = self.course_info[CONSTANTS.NAME]
 
-        course_path = parent.get_path() + course_name
+        course_path = os.path.join(parent.get_path(), course_name)
 
         self.to_be_synced = True if course_name in parent.settings.courses_to_sync else False
 
@@ -62,7 +66,7 @@ class Course(CanvasEntity):
                               name=course_name,
                               sync_path=course_path,
                               parent=parent,
-                              identifier=u"course",
+                              identifier=CONSTANTS.ENTITY_COURSE,
                               folder=self.to_be_synced)
 
     def __repr__(self):
@@ -134,6 +138,14 @@ class Course(CanvasEntity):
 
         # Add files folder
         self.add_files_folder()
+
+        # sync history
+        history_record = dict({
+            CONSTANTS.HISTORY_ID: self.get_id(),
+            CONSTANTS.HISTORY_PATH: self.get_path(),
+            CONSTANTS.HISTORY_TYPE: CONSTANTS.ENTITY_COURSE
+        })
+        self.synchronizer.history.write_history_record_to_file(history_record)
 
         counter[0] += 1
         for child in self:

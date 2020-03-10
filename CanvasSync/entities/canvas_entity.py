@@ -196,7 +196,7 @@ class CanvasEntity(object):
 
     def update_path(self):
         """ Update the path to the current parents sync path plus the current file name """
-        self.sync_path = self.get_parent().get_path() + self.get_name()
+        self.sync_path = os.path.join(self.get_parent().get_path(), self.get_name())
 
     def _make_folder(self):
         """ Create a folder on the sync path if not already present """
