@@ -87,7 +87,7 @@ class Synchronizer(CanvasEntity):
         Method that adds all Course objects representing Canvas courses to the
         list of children
         """
-        # Download list of dictionaries representing Canvas crouses and
+        # Download list of dictionaries representing Canvas courses and
         # add them all to the list of children
         for course_information in self.download_courses():
 
@@ -105,7 +105,6 @@ class Synchronizer(CanvasEntity):
         """ Walk by adding all Courses to the list of children """
 
         # Print initial walk message
-        print(self)
         print(ANSI.format(u"\n[*] Mapping out the Canvas folder hierarchy. "
                           u"Please wait...", u"red"))
         self.add_courses()

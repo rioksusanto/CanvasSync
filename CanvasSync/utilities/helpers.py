@@ -4,7 +4,7 @@ February 2017
 
 --------------------------------------------
 
-static_function.py, module
+helpers.py, module
 
 A collection of small static helper-functions used in various modules of CanvasSync.
 
@@ -90,7 +90,7 @@ def get_corrected_path(path, parent_path, folder):
     path        : string  | A string representing a path
     parent_path : string  | A string representing the path of the parent of the object calling this method
                              It is used to determine what part of the 'path' variable is the actual path and what is
-                             the name of the sub-folder/file that could potentially contain forward slahsed that must
+                             the name of the sub-folder/file that could potentially contain forward slashed that must
                              be replaced by dots.
     folder      : boolean | Does the input path point to a folder? (False = file)
                              If the path points to a folder, a trailing forward slash is appended to the path string.
@@ -118,6 +118,35 @@ def get_corrected_name(name):
         base, ext = os.path.splitext(name)
         name = base[:max_length - len(ext)] + ext
     return name
+
+
+def get_files_and_folders(path, include_full_path=False, include_dot=False):
+    """
+    Retrieves the paths to files and folders within a specified path.
+    This will returns a list of paths for files, folders ([file_path], [folder_path]).
+
+    path: string | A string a directory path containing other files and folders
+    include_full_path: boolean | True to include full path of the retrieved files and folders
+    include_dot: boolean | True to include files and folders with names starting with a "."
+    """
+    files = []
+    folders = []
+
+    if not os.path.isdir(path):
+        return files, folders
+
+    for res in os.listdir(path):
+        res_path = os.path.join(path, res)
+        res_data = res_path if include_full_path else res
+
+        if res.startswith(".") and not include_dot:
+            continue
+        if os.path.isfile(res_path):
+            files.append(res_data)
+        elif os.path.isdir(res_path):
+            folders.append(res_data)
+
+    return files, folders
 
 
 def validate_domain(domain):
@@ -158,6 +187,12 @@ def validate_token(domain, token):
         return False
     else:
         return True
+
+
+def convert_timestamp_to_utc(time):
+    utc = datetime.utcfromtimestamp(time)
+    return utc.strftime('%Y-%m-%dT%H:%M:%SZ')
+
 
 def convert_utc_to_timestamp(str):
     time = datetime.strptime(str,'%Y-%m-%dT%H:%M:%SZ')

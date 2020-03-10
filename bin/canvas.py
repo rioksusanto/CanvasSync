@@ -34,6 +34,7 @@ from six.moves import input
 # CanvasSync modules
 try:
     from CanvasSync.entities.synchronizer import Synchronizer
+    from CanvasSync.local_entities.local_synchronizer import LocalSynchronizer
 except ImportError as e:
     if os.path.exists("../CanvasSync"):
         debug = input("CanvasSync was not found on the PYTHONPATH, but it"
@@ -45,6 +46,7 @@ except ImportError as e:
         if debug == "y":
             sys.path.insert(0, os.path.abspath('../'))
             from CanvasSync.entities.synchronizer import Synchronizer
+            from CanvasSync.local_entities.local_synchronizer import LocalSynchronizer
         else:
             raise e
     else:
@@ -101,7 +103,7 @@ def run_canvas_sync():
                 # Force sync
                 manual_sync = True
             elif o in (u"-p", u"--password"):
-                # Specify decyption password
+                # Specify decryption password
                 print ("Warning: entering password via command "
                        "line can be dangerous")
                 password = a.rstrip()
@@ -123,9 +125,10 @@ def run_canvas_sync():
     if show_info:
         settings.show(quit=True)
 
+    # TODO: Update arguments to include both manual download and upload sync
     # If -S or --sync was specified, sync and exit
     if manual_sync:
-        do_sync(settings, password)
+        do_download_sync(settings, password)
         sys.exit()
 
     # If here, CanvasSync was launched without parameters, show main screen
@@ -134,7 +137,7 @@ def run_canvas_sync():
 
 def main_menu(settings):
     """
-    Main menu function, calss the settings.show_
+    Main menu function, calls the settings.show_
     main_screen function and handles user response
     """
     to_do = settings.show_main_screen(settings.settings_file_exists())
@@ -150,13 +153,17 @@ def main_menu(settings):
         main_menu(settings)
     elif to_do == u"show_help":
         usage.help()
+    elif to_do == u"sync_upload":
+        do_upload_sync(settings, "")
     else:
-        do_sync(settings, "")
+        do_download_sync(settings, "")
 
 
-def do_sync(settings, password=None):
-    # Initialize the Instructure Api object used to make API
-    # calls to the Canvas server
+def do_download_sync(settings, password=None):
+    """
+    Main function to perform a download synchronization, downloading online changes from Canvas
+    Initialize the Instructure Api object used to make API calls to the Canvas server
+    """
     valid_token = settings.load_settings(password)
     if not valid_token:
         settings.print_auth_token_reset_error()
@@ -168,6 +175,27 @@ def do_sync(settings, password=None):
     # Start Synchronizer with the current settings
     synchronizer = Synchronizer(settings=settings, api=api)
     synchronizer.sync()
+
+    # If here, sync was completed, show prompt
+    print(ANSI.format(u"\n\n[*] Sync complete", formatting=u"bold"))
+
+
+def do_upload_sync(settings, password=None):
+    """
+    Main function to perform an upload synchronization, uploading offline changes towards Canvas
+    Initialize the Instructure Api object used to make API calls to the Canvas server
+    """
+    valid_token = settings.load_settings(password)
+    if not valid_token:
+        settings.print_auth_token_reset_error()
+        sys.exit()
+
+    # Initialize the API object
+    api = InstructureApi(settings)
+
+    # Start LocalSynchronizer with the current settings
+    local_synchronizer = LocalSynchronizer(settings=settings, api=api)
+    local_synchronizer.sync()
 
     # If here, sync was completed, show prompt
     print(ANSI.format(u"\n\n[*] Sync complete", formatting=u"bold"))
