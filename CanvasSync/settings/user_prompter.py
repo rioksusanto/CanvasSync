@@ -58,15 +58,16 @@ def show_main_screen(settings_file_exists):
         print(ANSI.format(u"Automatically synchronize modules, assignments & files located on a Canvas web server.",
                           u"announcer"))
         print(ANSI.format(u"\nWhat would you like to do?", u"underline"))
-        print(u"\n\t1) " + ANSI.format(u"Synchronize my Canvas", u"blue"))
-        print(u"\t2) " + ANSI.format(u"Set new settings", u"white"))
-        print(u"\t3) " + ANSI.format(u"Show current settings", u"white"))
-        print(u"\t4) " + ANSI.format(u"Show help", u"white"))
+        print(u"\n\t1) " + ANSI.format(u"Synchronize my Canvas (download online changes)", u"blue"))
+        print(u"\t2) " + ANSI.format(u"Synchronize my Canvas (upload offline changes)", u"white"))
+        print(u"\t3) " + ANSI.format(u"Set new settings", u"white"))
+        print(u"\t4) " + ANSI.format(u"Show current settings", u"white"))
+        print(u"\t5) " + ANSI.format(u"Show help", u"white"))
         print(u"\n\t0) " + ANSI.format(u"Quit", u"yellow"))
 
         try:
             choice = int(input(u"\nChoose number: "))
-            if choice < 0 or choice > 4:
+            if choice < 0 or choice > 5:
                 continue
         except ValueError:
             continue
@@ -74,7 +75,7 @@ def show_main_screen(settings_file_exists):
         if choice == 1 and not settings_file_exists:
             to_do = u"set_settings"
         else:
-            to_do = [u"quit", u"sync", u"set_settings", u"show_settings", u"show_help"][choice]
+            to_do = [u"quit", u"sync_download", u"sync_upload", u"set_settings", u"show_settings", u"show_help"][choice]
 
     return to_do
 

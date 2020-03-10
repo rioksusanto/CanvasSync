@@ -34,7 +34,28 @@ class InstructureApi(object):
         api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
         """
         return requests.get(u"%s%s" % (self.settings.domain, api_call),
-                            headers={u'Authorization': u"Bearer %s" % self.settings.token})
+                            headers=self.get_auth_header())
+
+    def _post(self, api_call, **kwargs):
+        """
+        [PRIVATE] Implements the basic POST call to the API. The post_json method wraps around this method.
+
+        api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
+        """
+        return requests.post(u"%s%s" % (self.settings.domain, api_call),
+                             headers=self.get_auth_header(), **kwargs)
+
+    def _put(self, api_call, **kwargs):
+        """
+        [PRIVATE] Implements the basic PUT call to the API. The put_json method wraps around this method.
+
+        api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
+        """
+        return requests.put(u"%s%s" % (self.settings.domain, api_call),
+                            headers=self.get_auth_header(), **kwargs)
+
+    def get_auth_header(self):
+        return {u'Authorization': u"Bearer %s" % self.settings.token}
 
     def get_json(self, api_call):
         """
@@ -44,6 +65,26 @@ class InstructureApi(object):
         api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
         """
         return json.loads(self._get(api_call).text)
+
+    def post_json(self, api_call, body, **kwargs):
+        """
+        A wrapper around the private _get method that will call _post with a specified API call and return the json
+        digested dictionary.
+
+        api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
+        body     : dict   | Dictionary representing the body of the payload
+        """
+        return json.loads(self._post(api_call, data=body, **kwargs).text)
+
+    def put_json(self, api_call, body, **kwargs):
+        """
+        A wrapper around the private _get method that will call _put with a specified API call and return the json
+        digested dictionary.
+
+        api_call : string | Any call to the Instructure API ("/api/v1/courses" for instance)
+        body     : object | Dictionary representing the body of the payload
+        """
+        return json.loads(self._put(api_call, data=body, **kwargs).text)
 
     def get_json_list(self, api_call):
         data = self.get_json(api_call)
@@ -140,3 +181,30 @@ class InstructureApi(object):
         page_id : int | A page ID number
         """
         return self.get_json(u"/api/v1/courses/%s/pages/%s" % (course_id, page_id))
+
+    def upload_file(self, course_id, body):
+        """
+        Uploads a file into Canvas system
+
+        course_id : int  | A course ID number
+        body      : dict | Dictionary representing the file to upload
+        """
+        return self.post_json(u"/api/v1/courses/%s/files" % course_id, body)
+
+    def upload_module_item(self, course_id, module_id, body):
+        """
+        Uploads an item into a module
+
+        course_id : int | A course ID number
+        module_id : int | A module ID number
+        """
+        return self.post_json(u"/api/v1/courses/%s/modules/%s/items" % (course_id, module_id), body)
+
+    def update_file(self, course_id, body):
+        """
+        Updates a file in the Canvas system
+
+        course_id : int  | A course ID number
+        body      : dict | Dictionary representing the file to update
+        """
+        return self.put_json(u"/api/v1/courses/%s/files" % course_id, body)
