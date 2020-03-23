@@ -215,3 +215,30 @@ class InstructureApi(object):
         body      : dict | Dictionary representing the file to update
         """
         return self.put_json(u"/api/v1/courses/%s/files" % course_id, body)
+
+    def get_file_by_id(self, file_id):
+        """
+        Returns a dictionaries of information on a File object
+
+        file_id: int | A file ID number
+        """
+        return self.get_json(u"/api/v1/files/%s" % file_id)
+
+    def upload_file_by_folder(self, folder_id, body):
+        """
+        Uploads a file into Canvas system
+
+        folder_id : int  | A folder ID number
+        body      : dict | Dictionary representing the file to upload
+        """
+        return self.post_json(u"/api/v1/folders/%s/files" % folder_id, body)
+
+    def upload_file_to_url(self, upload_url, upload_params, files):
+        """
+        Uploads a file into Canvas upload url
+
+        upload_url    : string | Upload url returned from Canvas
+        upload_params : dict   | Upload params returned from Canvas
+        files         : dict   |  Dictionary representing files to be uploaded
+        """
+        return requests.post(upload_url,  params=upload_params, files=files)

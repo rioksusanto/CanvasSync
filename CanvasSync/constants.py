@@ -44,6 +44,7 @@ PAGE_HTML_URL = u'html_url'
 
 # file
 FILE_LOCKED_FOR_USER = u'locked_for_user'
+FILE_FOLDER_ID = u'folder_id'
 
 # file upload api
 FILE_UPLOAD_LOCATION = u'location'

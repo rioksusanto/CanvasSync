@@ -12,6 +12,7 @@ from __future__ import print_function
 import json
 import requests
 import sys
+import os
 
 # Third party
 from six import text_type
@@ -49,22 +50,19 @@ class LocalFile(LocalCanvasEntity):
         """ String representation, overwriting base class method """
         return "[{}] {}".format(CONSTANTS.LOCAL_ET_FILE, self.name)
 
-    def upload_file(self, course_id):
+    def upload_file(self, canvas_res):
         """
         Uploads this file to an appointed location provided by Canvas
 
-        course_id : string | A dictionary of information on the file object
+        canvas_res : object | A dictionary of information on the file upload
         """
-        canvas_res = self.api.upload_file(course_id, dict(
-            name=self.name,
-            size=self.get_stat().st_size
-        ))
-
-        file_upload_res = requests.post(canvas_res.get(CONSTANTS.FILE_UPLOAD_URL),
-                                        params=canvas_res.get(CONSTANTS.FILE_UPLOAD_PARAMS),
-                                        files=dict(
-                                            file=(self.name, open(self.sync_path, 'rb'))
-                                        ))
+        file_upload_res = self.api.upload_file_to_url(
+            canvas_res.get(CONSTANTS.FILE_UPLOAD_URL),
+            canvas_res.get(CONSTANTS.FILE_UPLOAD_PARAMS),
+            files=dict(
+                file=(self.name, open(self.sync_path, 'rb'))
+            )
+        )
         file_upload_res.raise_for_status()
         file_upload_res_json = json.loads(file_upload_res.text)
 
@@ -77,6 +75,9 @@ class LocalFile(LocalCanvasEntity):
 
         # Set this entity's ID
         self.id = file_upload_res_json.get(CONSTANTS.ID)
+        modified_at = file_upload_res_json.get(CONSTANTS.HISTORY_MODIFIED_AT)
+        timestamp = helpers.convert_utc_to_timestamp(modified_at)
+        os.utime(self.sync_path, (timestamp, timestamp))
 
     def upload_to_canvas(self):
         """
@@ -87,7 +88,11 @@ class LocalFile(LocalCanvasEntity):
 
             # TODO: Handle uploads to specific folder
             self.print_status(u"UPLOADING", color=u"blue", overwrite_previous_line=False)
-            self.upload_file(course.id)
+            canvas_res = self.api.upload_file(course.id, dict(
+                name=self.name,
+                size=self.get_stat().st_size
+            ))
+            self.upload_file(canvas_res)
             self.print_status(u"UPLOADED", color=u"green", overwrite_previous_line=True)
 
             if self.parent.get_identifier_string() == CONSTANTS.LOCAL_ET_MODULE:
@@ -107,8 +112,21 @@ class LocalFile(LocalCanvasEntity):
             self.print_status(u"FAILED UPLOAD", color=u"red", message=u" {} ".format(e), overwrite_previous_line=True)
 
     def update_canvas_file(self):
-        # TODO
-        pass
+        try:
+            id = self.id
+            file_info = self.api.get_file_by_id(id)
+            folder_id = file_info.get(CONSTANTS.FILE_FOLDER_ID)
+            self.print_status(u"UPDATING", color=u"blue", overwrite_previous_line=False)
+            canvas_res = self.api.upload_file_by_folder(folder_id, dict(
+                name=self.name,
+                size=self.get_stat().st_size,
+                on_duplicate='overwrite'
+            ))
+            self.upload_file(canvas_res)
+            self.print_status(u"UPDATED", color=u"green", overwrite_previous_line=True)
+            self.get_synchronizer().update_history(self)
+        except (IOError, requests.exceptions.HTTPError) as e:
+            self.print_status(u"FAILED UPDATE", color=u"red", message=u" {} ".format(e), overwrite_previous_line=True)
 
     def print_status(self, status, color, message='', overwrite_previous_line=False):
         """
